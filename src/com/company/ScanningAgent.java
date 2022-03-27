@@ -21,6 +21,7 @@ import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.core.Point;
 
+import javax.swing.*;
 import java.util.Random;
 
 public class ScanningAgent extends Agent
@@ -79,16 +80,23 @@ protected void setup(){
                         _Environment= _ImageCodecs.imread(msgContentParts[1],Imgcodecs.IMREAD_GRAYSCALE);
                         Random rand= new Random();
                         int isWidth= rand.nextInt(2);
+                        int isMax= rand.nextInt(2);
                         if(isWidth==1)
                         {
-                            _Position= new Point((double)rand.nextInt((int)_Environment.size().width),0.0);
+                            double y=0;
+                            if(isMax==1){
+                             y= _Environment.size().height;}
+                            _Position= new Point((double)rand.nextInt((int)_Environment.size().width),y);
                         }
                         else
                         {
-                            _Position= new Point(0.0,(double)rand.nextInt((int)_Environment.size().height));
+                            double x=0;
+                            if(isMax==1){
+                            x=_Environment.size().width;}
+                            _Position= new Point(x,(double)rand.nextInt((int)_Environment.size().height));
                         }
-                        SendPositionToManager();
-                        addBehaviour(new SteppingBehaviour((ScanningAgent)myAgent ,1000));
+                        SendPositionToManager(true);
+                        addBehaviour(new SteppingBehaviour((ScanningAgent)myAgent ,20));
                     }
                     else {
                         System.out.println(myAgent.getLocalName()+" Unexpected message received from "+msg.getSender().getLocalName());
@@ -105,12 +113,61 @@ protected void setup(){
         fe.printStackTrace();
     }
 }
-    public void SendPositionToManager()
+    public void SendPositionToManager(boolean starter)
     {
         ACLMessage msg= new ACLMessage(ACLMessage.INFORM);
-
-        msg.setContent("my_position@"+_Position.x+"@"+_Position.y);
+        if(starter)
+        { msg.setContent("my_starter_position@" + _Position.x + "@" + _Position.y);}
+        else {
+            msg.setContent("my_position@" + _Position.x + "@" + _Position.y);
+        }
         msg.addReceiver(_DataManager);
         send(msg);
+    }
+    public void NextStep()
+    {
+        int x=(int)_Position.x;
+        int y=(int)_Position.y;
+        int[][] neighbours= new int[8][2];
+        neighbours[0][0]=x;
+        neighbours[0][1]=y-1;
+        neighbours[1][0]=x+1;
+        neighbours[1][1]=y;
+        neighbours[2][0]=x-1;
+        neighbours[2][1]=y;
+        neighbours[3][0]=x;
+        neighbours[3][1]=y+1;
+        neighbours[4][0]=x-1;
+        neighbours[4][1]=y-1;
+        neighbours[5][0]=x+1;
+        neighbours[5][1]=y-1;
+        neighbours[6][0]=x+1;
+        neighbours[6][1]=y+1;
+        neighbours[7][0]=x-1;
+        neighbours[7][1]=y+1;
+        for(int i=0;i<8;i++)
+        {
+            if((neighbours[i][0]<0 || neighbours[i][1]<0 || neighbours[i][0]>=_Environment.size().width || neighbours[i][0]>=_Environment.size().height ))
+            {continue;}
+            double[] pixel=_Environment.get(neighbours[i][0],neighbours[i][1]);
+            if(pixel[0]<127)
+            {
+                ACLMessage msg= new ACLMessage(ACLMessage.INFORM);
+                msg.setContent("edge_position@" + neighbours[i][0] + "@" + neighbours[i][1]);
+                msg.addReceiver(_DataManager);
+                send(msg);
+            }
+        }
+        int index=0;
+        double[] pixelValue;
+        do {
+            do {
+                Random rand = new Random();
+                index = rand.nextInt(4);
+            } while ((neighbours[index][0] < 0 || neighbours[index][1] < 0
+                    || neighbours[index][0] >= _Environment.size().width || neighbours[index][0] >= _Environment.size().height));
+            pixelValue=_Environment.get(neighbours[index][0],neighbours[index][1]);
+        }while (pixelValue[0]<127);
+        _Position= new Point((double)neighbours[index][0],(double)neighbours[index][1]);
     }
 }

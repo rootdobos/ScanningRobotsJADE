@@ -9,7 +9,9 @@ public class SteppingBehaviour extends TickerBehaviour {
 
     @Override
     protected void onTick() {
-        System.out.println("Agent "+myAgent.getLocalName()+": tick="+getTickCount());
-        ((ScanningAgent)myAgent).SendPositionToManager();
+        //System.out.println("Agent "+myAgent.getLocalName()+": tick="+getTickCount());
+        ((ScanningAgent)myAgent).NextStep();
+        ((ScanningAgent)myAgent).SendPositionToManager(false);
+
     }
 }

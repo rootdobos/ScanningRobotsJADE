@@ -10,16 +10,14 @@ import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
+import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
+import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
-
-import org.opencv.core.Point;
 
 public class DataManagerAgent extends Agent
 {
@@ -31,16 +29,18 @@ public class DataManagerAgent extends Agent
     protected void setup() {
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
         System.out.println(getLocalName()+" STARTED");
-        Object[] args= getArguments();
-
-        if (args != null && args.length > 0) {
-            _EnvironmentPath=(String) args[0];
+        Object[] arguments= getArguments();
+        int numberOfScanners=0;
+        if (arguments != null && arguments.length > 0) {
+            String[] args= ((String)arguments[0]).split("%");
+            _EnvironmentPath=args[0];
+            numberOfScanners=Integer.parseInt(args[1]);
         }
         _ImageCodecs= new Imgcodecs();
         Mat environment= _ImageCodecs.imread(_EnvironmentPath,Imgcodecs.IMREAD_GRAYSCALE);
         System.out.println("Environment size: " +environment.size().height +":"+environment.size().width+ ":" +environment.channels());
         _ScanningInformation= new Mat(environment.size(), CvType.CV_8UC3);
-        _ScanningInformation.setTo(new Scalar(255));
+        _ScanningInformation.setTo(new Scalar(255,255,255));
         //HighGui.imshow("Sinf",_ScanningInformation);
         //HighGui.waitKey();
         try {
@@ -75,14 +75,24 @@ public class DataManagerAgent extends Agent
                         myAgent.send(reply);
                         System.out.println(myAgent.getLocalName()+" SENT ENVIRONMENT PATH TO "+msg.getSender().getLocalName());
                     }
-                    else if(msgContentParts[0].equalsIgnoreCase("my_position") )
+                    else if(msgContentParts[0].equalsIgnoreCase("my_starter_position") )
                     {
                         Point scannerPosition= new Point(Double.parseDouble( msgContentParts[1]),Double.parseDouble(msgContentParts[2]));
                         _ScannerPositions.put(msg.getSender(),scannerPosition);
-//                        if(_ScannerPositions.containsKey(msg.getSender()))
-//                        {
-//                            _ScannerPositions[msg.getSender()]=
-//                        }
+                    }
+                    else if(msgContentParts[0].equalsIgnoreCase("my_position") )
+                    {
+                        Point position=_ScannerPositions.get(msg.getSender());
+                        double[] gray= new double[]{150,150,150};
+                        _ScanningInformation.put((int)position.x,(int)position.y,gray);
+                        Point scannerPosition= new Point(Double.parseDouble( msgContentParts[1]),Double.parseDouble(msgContentParts[2]));
+                        _ScannerPositions.put(msg.getSender(),scannerPosition);
+                        DrawAgentPositions();
+                    }
+                    else if(msgContentParts[0].equalsIgnoreCase("edge_position") )
+                    {
+                        double[] red= new double[]{0,0,254};
+                        _ScanningInformation.put(Integer.parseInt(msgContentParts[1]),Integer.parseInt(msgContentParts[2]),red);
                     }
                     else {
                         System.out.println(myAgent.getLocalName()+" Unexpected message received from "+msg.getSender().getLocalName());
@@ -94,5 +104,32 @@ public class DataManagerAgent extends Agent
                 }
             }
         });
+        try {
+            for(int i=0;i<numberOfScanners;i++) {
+                AgentContainer container = (AgentContainer) getContainerController(); // get a container controller for creating new agents
+                String nickName = "Scanner"+i;
+                AgentController t1 = container.createNewAgent(nickName, "com.company.ScanningAgent", null);
+                t1.start();
+            }
+        } catch (Exception any) {
+            any.printStackTrace();
+        }
+    }
+    private void RefreshGUI()
+    {
+        Mat resizeimage = new Mat();
+        Size sz = new Size(_ScanningInformation.width()*5,_ScanningInformation.height()*5);
+        Imgproc.resize( _ScanningInformation, resizeimage, sz );
+        HighGui.imshow("ScannedData",resizeimage);
+        HighGui.waitKey(1);
+    }
+    private void DrawAgentPositions()
+    {
+        for (Map.Entry<AID, Point> entry: _ScannerPositions.entrySet())
+        {
+            double[] green= new double[]{0,255,0};
+            _ScanningInformation.put((int)entry.getValue().x,(int)entry.getValue().y,green);
+        }
+        RefreshGUI();
     }
 }
