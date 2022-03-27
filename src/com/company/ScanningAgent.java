@@ -13,11 +13,22 @@ import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.wrapper.*;
 import jade.util.leap.Iterator;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.core.Point;
+
+import java.util.Random;
+
 public class ScanningAgent extends Agent
 {
     private AID _DataManager;
     private Point _Position;
+    private Imgcodecs _ImageCodecs;
+    private Mat _Environment;
 protected void setup(){
     System.out.println("Agent: "+getLocalName()+" searching for manager");
     try{
@@ -64,6 +75,20 @@ protected void setup(){
                     if (msgContentParts[0].equalsIgnoreCase("environment_path")) {
                         // if a greetings message is arrived then send an ANSWER
                         System.out.println(myAgent.getLocalName()+" RECEIVED THE ENVIRONMENT PATH FROM "+msg.getSender().getLocalName());
+                        _ImageCodecs= new Imgcodecs();
+                        _Environment= _ImageCodecs.imread(msgContentParts[1],Imgcodecs.IMREAD_GRAYSCALE);
+                        Random rand= new Random();
+                        int isWidth= rand.nextInt(2);
+                        if(isWidth==1)
+                        {
+                            _Position= new Point((double)rand.nextInt((int)_Environment.size().width),0.0);
+                        }
+                        else
+                        {
+                            _Position= new Point(0.0,(double)rand.nextInt((int)_Environment.size().height));
+                        }
+                        SendPositionToManager();
+                        addBehaviour(new SteppingBehaviour((ScanningAgent)myAgent ,1000));
                     }
                     else {
                         System.out.println(myAgent.getLocalName()+" Unexpected message received from "+msg.getSender().getLocalName());
@@ -80,5 +105,12 @@ protected void setup(){
         fe.printStackTrace();
     }
 }
+    public void SendPositionToManager()
+    {
+        ACLMessage msg= new ACLMessage(ACLMessage.INFORM);
 
+        msg.setContent("my_position@"+_Position.x+"@"+_Position.y);
+        msg.addReceiver(_DataManager);
+        send(msg);
+    }
 }

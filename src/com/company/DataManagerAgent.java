@@ -17,9 +17,9 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
+import org.opencv.core.Point;
 
 public class DataManagerAgent extends Agent
 {
@@ -27,6 +27,7 @@ public class DataManagerAgent extends Agent
     private Imgcodecs _ImageCodecs;
     private Mat _ScanningInformation;
     private List<AID>  _Scanners= new ArrayList<AID>();
+    private HashMap<AID,Point> _ScannerPositions= new HashMap<AID,Point>();
     protected void setup() {
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
         System.out.println(getLocalName()+" STARTED");
@@ -40,7 +41,6 @@ public class DataManagerAgent extends Agent
         System.out.println("Environment size: " +environment.size().height +":"+environment.size().width+ ":" +environment.channels());
         _ScanningInformation= new Mat(environment.size(), CvType.CV_8UC3);
         _ScanningInformation.setTo(new Scalar(255));
-        System.out.println("Sinf size: " +_ScanningInformation.size().height +":"+_ScanningInformation.size().width+ ":" +_ScanningInformation.channels());
         //HighGui.imshow("Sinf",_ScanningInformation);
         //HighGui.waitKey();
         try {
@@ -74,6 +74,15 @@ public class DataManagerAgent extends Agent
                         reply.setContent(message);
                         myAgent.send(reply);
                         System.out.println(myAgent.getLocalName()+" SENT ENVIRONMENT PATH TO "+msg.getSender().getLocalName());
+                    }
+                    else if(msgContentParts[0].equalsIgnoreCase("my_position") )
+                    {
+                        Point scannerPosition= new Point(Double.parseDouble( msgContentParts[1]),Double.parseDouble(msgContentParts[2]));
+                        _ScannerPositions.put(msg.getSender(),scannerPosition);
+//                        if(_ScannerPositions.containsKey(msg.getSender()))
+//                        {
+//                            _ScannerPositions[msg.getSender()]=
+//                        }
                     }
                     else {
                         System.out.println(myAgent.getLocalName()+" Unexpected message received from "+msg.getSender().getLocalName());
