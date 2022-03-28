@@ -84,7 +84,8 @@ public class DataManagerAgent extends Agent
                     {
                         Point position=_ScannerPositions.get(msg.getSender());
                         double[] gray= new double[]{150,150,150};
-                        _ScanningInformation.put((int)position.x,(int)position.y,gray);
+                        //_ScanningInformation.put((int)position.x,(int)position.y,gray);
+                        _ScanningInformation.put((int)position.y,(int)position.x,gray);
                         Point scannerPosition= new Point(Double.parseDouble( msgContentParts[1]),Double.parseDouble(msgContentParts[2]));
                         _ScannerPositions.put(msg.getSender(),scannerPosition);
                         DrawAgentPositions();
@@ -92,7 +93,8 @@ public class DataManagerAgent extends Agent
                     else if(msgContentParts[0].equalsIgnoreCase("edge_position") )
                     {
                         double[] red= new double[]{0,0,254};
-                        _ScanningInformation.put(Integer.parseInt(msgContentParts[1]),Integer.parseInt(msgContentParts[2]),red);
+                        //_ScanningInformation.put(Integer.parseInt(msgContentParts[1]),Integer.parseInt(msgContentParts[2]),red);
+                        _ScanningInformation.put(Integer.parseInt(msgContentParts[2]),Integer.parseInt(msgContentParts[1]),red);
                     }
                     else {
                         System.out.println(myAgent.getLocalName()+" Unexpected message received from "+msg.getSender().getLocalName());
@@ -115,20 +117,28 @@ public class DataManagerAgent extends Agent
             any.printStackTrace();
         }
     }
+    private int guiCounter=0;
     private void RefreshGUI()
     {
-        Mat resizeimage = new Mat();
-        Size sz = new Size(_ScanningInformation.width()*5,_ScanningInformation.height()*5);
-        Imgproc.resize( _ScanningInformation, resizeimage, sz );
-        HighGui.imshow("ScannedData",resizeimage);
-        HighGui.waitKey(1);
+        guiCounter++;
+        if(guiCounter==100)
+        {
+            Mat resizeimage = new Mat();
+            Size sz = new Size(_ScanningInformation.width() * 5, _ScanningInformation.height() * 5);
+            Imgproc.resize(_ScanningInformation, resizeimage, sz);
+            HighGui.imshow("ScannedData", resizeimage);
+            // HighGui.imshow("ScannedData",_ScanningInformation);
+            HighGui.waitKey(1);
+            guiCounter=0;
+        }
     }
     private void DrawAgentPositions()
     {
         for (Map.Entry<AID, Point> entry: _ScannerPositions.entrySet())
         {
             double[] green= new double[]{0,255,0};
-            _ScanningInformation.put((int)entry.getValue().x,(int)entry.getValue().y,green);
+           //_ScanningInformation.put((int)entry.getValue().x,(int)entry.getValue().y,green);
+            _ScanningInformation.put((int)entry.getValue().y,(int)entry.getValue().x,green);
         }
         RefreshGUI();
     }

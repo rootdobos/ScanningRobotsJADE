@@ -85,14 +85,16 @@ protected void setup(){
                         {
                             double y=0;
                             if(isMax==1){
-                             y= _Environment.size().height;}
+                             y= _Environment.size().height-1;}
+                            //_Position= new Point(x,(double)rand.nextInt((int)_Environment.size().width));
                             _Position= new Point((double)rand.nextInt((int)_Environment.size().width),y);
                         }
                         else
                         {
                             double x=0;
                             if(isMax==1){
-                            x=_Environment.size().width;}
+                            x=_Environment.size().width-1;}
+                            //_Position= new Point((double)rand.nextInt((int)_Environment.size().height),y);
                             _Position= new Point(x,(double)rand.nextInt((int)_Environment.size().height));
                         }
                         SendPositionToManager(true);
@@ -147,9 +149,12 @@ protected void setup(){
         neighbours[7][1]=y+1;
         for(int i=0;i<8;i++)
         {
-            if((neighbours[i][0]<0 || neighbours[i][1]<0 || neighbours[i][0]>=_Environment.size().width || neighbours[i][0]>=_Environment.size().height ))
+            if((neighbours[i][0]<0 || neighbours[i][1]<0 || neighbours[i][0]>=_Environment.size().width || neighbours[i][1]>=_Environment.size().height ))
             {continue;}
-            double[] pixel=_Environment.get(neighbours[i][0],neighbours[i][1]);
+            //double[] pixel=_Environment.get(neighbours[i][0],neighbours[i][1]);
+            double[] pixel=_Environment.get(neighbours[i][1],neighbours[i][0]);
+            if(pixel==null)
+            {System.out.println("Null pixel value: Position: "+neighbours[i][0]+":"+neighbours[i][1]);}
             if(pixel[0]<127)
             {
                 ACLMessage msg= new ACLMessage(ACLMessage.INFORM);
@@ -165,8 +170,9 @@ protected void setup(){
                 Random rand = new Random();
                 index = rand.nextInt(4);
             } while ((neighbours[index][0] < 0 || neighbours[index][1] < 0
-                    || neighbours[index][0] >= _Environment.size().width || neighbours[index][0] >= _Environment.size().height));
-            pixelValue=_Environment.get(neighbours[index][0],neighbours[index][1]);
+                    || neighbours[index][0] >= _Environment.size().width || neighbours[index][1] >= _Environment.size().height));
+            //pixelValue=_Environment.get(neighbours[index][0],neighbours[index][1]);
+            pixelValue=_Environment.get(neighbours[index][1],neighbours[index][0]);
         }while (pixelValue[0]<127);
         _Position= new Point((double)neighbours[index][0],(double)neighbours[index][1]);
     }
