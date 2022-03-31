@@ -25,7 +25,7 @@ public class DataManagerAgent extends Agent
     private Imgcodecs _ImageCodecs;
     private Mat _ScanningInformation;
     private List<AID>  _Scanners= new ArrayList<AID>();
-
+    private ArrayList<Point> _EdgePoints= new ArrayList<>() ;
 
     private HashMap<AID,Point> _ScannerPositions= new HashMap<AID,Point>();
     protected void setup() {
@@ -94,16 +94,19 @@ public class DataManagerAgent extends Agent
                     }
                     else if(msgContentParts[0].equalsIgnoreCase("edge_position") )
                     {
-                        double[] red= new double[]{0,0,254};
-                        //_ScanningInformation.put(Integer.parseInt(msgContentParts[1]),Integer.parseInt(msgContentParts[2]),red);
-                        _ScanningInformation.put(Integer.parseInt(msgContentParts[2]),Integer.parseInt(msgContentParts[1]),red);
-                        for(AID scanner: _Scanners)
-                        {
-                            ACLMessage egdeMsg = new ACLMessage(ACLMessage.INFORM);
+                        Point newEdge= new Point(Double.parseDouble(msgContentParts[1]),Double.parseDouble(msgContentParts[2]));
+                        if(!Utilities.ContainsCoordinates(_EdgePoints,newEdge)) {
+                            _EdgePoints.add(newEdge);
+                            double[] red = new double[]{0, 0, 254};
+                            //_ScanningInformation.put(Integer.parseInt(msgContentParts[1]),Integer.parseInt(msgContentParts[2]),red);
+                            _ScanningInformation.put(Integer.parseInt(msgContentParts[2]), Integer.parseInt(msgContentParts[1]), red);
+                            for (AID scanner : _Scanners) {
+                                ACLMessage egdeMsg = new ACLMessage(ACLMessage.INFORM);
 
-                            egdeMsg.setContent("new_edge_found@" + Integer.parseInt(msgContentParts[1]) + "@" + Integer.parseInt(msgContentParts[2]));
-                            egdeMsg.addReceiver(scanner);
-                            send(egdeMsg);
+                                egdeMsg.setContent("new_edge_found@" + Integer.parseInt(msgContentParts[1]) + "@" + Integer.parseInt(msgContentParts[2]));
+                                egdeMsg.addReceiver(scanner);
+                                send(egdeMsg);
+                            }
                         }
                     }
                     else {

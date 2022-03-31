@@ -1,4 +1,6 @@
 package com.company;
+
+
 import jade.core.Agent;
 import jade.core.AID;
 import jade.domain.FIPAAgentManagement.*;
@@ -104,7 +106,7 @@ public class ScanningAgent extends Agent {
                             int x= Integer.parseInt(msgContentParts[1]);
                             int y= Integer.parseInt(msgContentParts[2]);
                             Point edgePoint= new Point((double)x,(double)y);
-                            if(!ContainsCoordinates(_EdgePoints,edgePoint))
+                            if(!Utilities.ContainsCoordinates(_EdgePoints,edgePoint))
                             {
                                 _CluePoint=edgePoint;
                             }
@@ -150,7 +152,7 @@ public class ScanningAgent extends Agent {
             double[] pixel = _Environment.get((int)nextSuggested.y,(int)nextSuggested.x);
             if (pixel[0] < 127  ) {
                 _CluePoint=null;
-                if(!ContainsCoordinates(_EdgePoints,nextSuggested)) {
+                if(!Utilities.ContainsCoordinates(_EdgePoints,nextSuggested)) {
                     RegisterEdgePoint((int) nextSuggested.x, (int) nextSuggested.y);
                 }
                 else
@@ -208,15 +210,7 @@ public class ScanningAgent extends Agent {
         _Position= NewPositionWithClue();
         LookNeighbourhoud();
     }
-    private boolean ContainsCoordinates(ArrayList<Point> container,Point point)
-    {
-        for (Point p: container
-             ) {
-            if(point.x==p.x && point.y==p.y)
-            {return true;}
-        }
-        return  false;
-    }
+
     private void RandomEdgeSearching()
     {
         LookNeighbourhoud();
@@ -271,7 +265,7 @@ public class ScanningAgent extends Agent {
             }
             if (pixel[0] < 127 ) {
                 _CluePoint=null;
-                if(!ContainsCoordinates(_EdgePoints,new Point((double)neighbours[i][0],(double)neighbours[i][1]))){
+                if(!Utilities.ContainsCoordinates(_EdgePoints,new Point((double)neighbours[i][0],(double)neighbours[i][1]))){
                 RegisterEdgePoint(neighbours[i][0],neighbours[i][1]);}
             }
         }
