@@ -136,8 +136,12 @@ public class DataManagerAgent extends Agent
         guiCounter++;
         if(guiCounter==100)
         {
+            String parentDir= Utilities.GetDirectory(_EnvironmentPath);
+            String outputFilePath=parentDir+"scanning_info.png";
+            Imgcodecs.imwrite(outputFilePath,_ScanningInformation);
             Mat resizeimage = new Mat();
-            Size sz = new Size(_ScanningInformation.width() * 5, _ScanningInformation.height() * 5);
+            double aspectRatio= ((double)_ScanningInformation.width())/_ScanningInformation.height();
+            Size sz = new Size(1200, 1200/aspectRatio);
             Imgproc.resize(_ScanningInformation, resizeimage, sz);
             HighGui.imshow("ScannedData", resizeimage);
             // HighGui.imshow("ScannedData",_ScanningInformation);
