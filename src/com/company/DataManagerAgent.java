@@ -25,6 +25,8 @@ public class DataManagerAgent extends Agent
     private Imgcodecs _ImageCodecs;
     private Mat _ScanningInformation;
     private List<AID>  _Scanners= new ArrayList<AID>();
+
+
     private HashMap<AID,Point> _ScannerPositions= new HashMap<AID,Point>();
     protected void setup() {
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
@@ -95,6 +97,14 @@ public class DataManagerAgent extends Agent
                         double[] red= new double[]{0,0,254};
                         //_ScanningInformation.put(Integer.parseInt(msgContentParts[1]),Integer.parseInt(msgContentParts[2]),red);
                         _ScanningInformation.put(Integer.parseInt(msgContentParts[2]),Integer.parseInt(msgContentParts[1]),red);
+                        for(AID scanner: _Scanners)
+                        {
+                            ACLMessage egdeMsg = new ACLMessage(ACLMessage.INFORM);
+
+                            egdeMsg.setContent("new_edge_found@" + Integer.parseInt(msgContentParts[1]) + "@" + Integer.parseInt(msgContentParts[2]));
+                            egdeMsg.addReceiver(scanner);
+                            send(egdeMsg);
+                        }
                     }
                     else {
                         System.out.println(myAgent.getLocalName()+" Unexpected message received from "+msg.getSender().getLocalName());
